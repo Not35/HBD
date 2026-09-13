@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAPPY BIRTHDAY</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #ff3366;
+            --primary-gradient: linear-gradient(135deg, #ff3366 0%, #ff6b8b 100%);
+            --accent-gold: #ffb703;
+            --bg-gradient: linear-gradient(180deg, #fff0f5 0%, #ffe4e1 50%, #ffd1dc 100%);
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.8);
+            --text-dark: #4a1525;
+            --shadow-soft: 0 15px 35px rgba(255, 51, 102, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Prompt', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 15px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* ---------------- Intro Screen (หน้าเค้ก) ---------------- */
+        .intro-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-gradient);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease, transform 0.8s ease, visibility 0.8s;
+            padding: 20px;
+        }
+
+        .intro-screen.fade-out {
+            opacity: 0;
+            transform: scale(1.15);
+            visibility: hidden;
+        }
+
+        .cake-box {
+            cursor: pointer;
+            text-align: center;
+            animation: floatCake 2.5s infinite ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .cake-img {
+            width: 220px;
+            height: auto;
+            max-width: 80vw;
+            filter: drop-shadow(0 15px 30px rgba(255, 51, 102, 0.35));
+            transition: transform 0.3s ease;
+            user-select: none;
+            border-radius: 20px;
+        }
+
+        .cake-box:hover .cake-img {
+            transform: scale(1.12) rotate(4deg);
+        }
+
+        .click-hint {
+            margin-top: 25px;
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--primary);
+            background: rgba(255, 255, 255, 0.9);
+            border: 1.5px solid var(--glass-border);
+            padding: 12px 28px;
+            border-radius: 50px;
+            box-shadow: 0 10px 25px rgba(255, 51, 102, 0.2);
+            backdrop-filter: blur(10px);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            animation: pulseHint 1.8s infinite ease-in-out;
+        }
+
+        @keyframes floatCake {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-16px); }
+        }
+
+        @keyframes pulseHint {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* ---------------- Background Canvas ---------------- */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ---------------- Main Content Layout ---------------- */
+        .container {
+            width: 100%;
+            max-width: 550px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            z-index: 1;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1.5px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 24px 20px;
+            box-shadow: var(--shadow-soft);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-3px);
+        }
+
+        h1 {
+            font-size: 22px;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        p.subtitle {
+            font-size: 13px;
+            color: #7a3b4e;
+            margin-bottom: 16px;
+        }
+
+        /* Countdown */
+        .countdown-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .time-box {
+            background: rgba(255, 255, 255, 0.85);
+            padding: 10px 4px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+        }
+
+        .time-box span {
+            display: block;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .time-box label {
+            font-size: 11px;
+            color: #9e5b6e;
+        }
+
+        /* Mini Upload Button */
+        .upload-btn-mini {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1.5px dashed var(--primary);
+            border-radius: 50px;
+            padding: 8px 18px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 15px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(255, 51, 102, 0.1);
+        }
+
+        .upload-btn-mini:hover {
+            background: var(--primary);
+            color: #fff;
+            transform: scale(1.04);
+        }
+
+        /* Gallery Slider */
+        .gallery-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 10px 5px;
+            border-radius: 20px;
+            scrollbar-width: thin;
+            scrollbar-color: #ff8da1 transparent;
+        }
+
+        .gallery-wrapper::-webkit-scrollbar {
+            height: 5px;
+        }
+
+        .gallery-wrapper::-webkit-scrollbar-thumb {
+            background: #ff8da1;
+            border-radius: 10px;
+        }
+
+        .gallery-track {
+            display: inline-flex;
+            gap: 12px;
+        }
+
+        .gallery-item {
+            width: 135px;
+            height: 135px;
+            object-fit: cover;
+            border-radius: 20px;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+            cursor: pointer;
+            border: 2px solid #fff;
+            flex-shrink: 0;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.06);
+        }
+
+        /* Letter Box */
+        .letter-box {
+            background: #fffdfd;
+            border-radius: 20px;
+            padding: 20px;
+            border: 1.5px dashed #ffb3c1;
+            text-align: left;
+            position: relative;
+            line-height: 1.7;
+            font-size: 14.5px;
+            color: #5c2031;
+        }
+
+        .letter-box::before {
+            content: '💌';
+            position: absolute;
+            top: -14px;
+            right: 20px;
+            font-size: 22px;
+            background: #fff;
+            padding: 0 6px;
+            border-radius: 50%;
+        }
+
+        /* Love Game */
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+            position: relative;
+            min-height: 55px;
+            align-items: center;
+        }
+
+        .btn-custom {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(255, 51, 102, 0.3);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-custom:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-no {
+            background: #bdc3c7;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            position: absolute;
+        }
+
+        /* Modal Lightbox */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal img {
+            max-width: 90%;
+            max-height: 80vh;
+            border-radius: 18px;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 0. หน้าเค้กก่อนเข้าเว็บหลัก (Intro Screen) -->
+    <div class="intro-screen" id="introScreen">
+        <div class="cake-box" onclick="enterWebsite()">
+            <img src="https://lh3.googleusercontent.com/d/1QT05VUaPkw5cOzSoPbcbCrkGVSpk65MD" class="cake-img" alt="Birthday Cake">
+            <div class="click-hint">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>ลองแตะที่เค้กดูสิ</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Particle Background -->
+    <canvas id="particleCanvas"></canvas>
+
+    <div class="container">
+
+        <!-- Countdown -->
+        <div class="glass-card">
+            <h1><i class="fa-solid fa-cake-candles"></i> นับถอยหลังวันเกิดคุณแฟนก๊านน</h1>
+            <p class="subtitle">26 กันยายน 2553 • อีกไม่นานก็จะถึงวันพิเศษแล้วนะ ✨</p>
+            <div class="countdown-grid">
+                <div class="time-box"><span id="days">0</span><label>วัน</label></div>
+                <div class="time-box"><span id="hours">0</span><label>ชั่วโมง</label></div>
+                <div class="time-box"><span id="minutes">0</span><label>นาที</label></div>
+                <div class="time-box"><span id="seconds">0</span><label>วินาที</label></div>
+            </div>
+        </div>
+
+        <!-- Auto-scrolling Gallery & Mini Upload Button -->
+        <div class="glass-card">
+            <h1><i class="fa-solid fa-heart"></i> ความทรงจำของเรา</h1>
+            <p class="subtitle""</p>
+            
+            <div class="upload-btn-mini" onclick="document.getElementById('imageInput').click()">
+                <i class="fa-solid fa-plus"></i>
+                <span>เพิ่มลูปก๊านน</span>
+                <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="uploadImage(event)">
+            </div>
+            
+            <div id="uploadProgress" style="display: none; margin-bottom: 12px; font-size: 13px; color: var(--primary);">
+                <span class="loader"></span> กำลังบันทึกลูปจร้าาาา
+            </div>
+
+            <div class="gallery-wrapper" id="galleryWrapper" onmouseenter="isHovered=true" onmouseleave="isHovered=false" ontouchstart="isHovered=true" ontouchend="isHovered=false">
+                <div class="gallery-track" id="galleryContainer">
+                    <p style="color: #888; font-size: 13px;"><span class="loader"></span> กำลังโหลดลูปภาพจร้าาพี่รอก่อน</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Letter -->
+        <div class="glass-card">
+            <h1><i class="fa-solid fa-envelope-open-text"></i> จดหมายถึงหมาเด๋ก </h1>
+            <div class="letter-box">
+                <p>สุขสันต์วันเกิดนะงับคุณแฟน<br>
+                ขอบคุณที่เข้ามาเป็นความสุขและรอยยิ้มในทุกๆ วันของเรา ขอให้เธอมีความสุขมากๆ สมหวังในทุกเรื่องที่ตั้งใจ สุขภาพแข็งแรง น่ารักกับเค้าไปแบบนี้ไปนานๆ นะ รักเทอที่สุดเบยน้าาา 🥰</p>
+            </div>
+        </div>
+
+        <!-- Interactive Question -->
+        <div class="glass-card">
+            <h1><i class="fa-solid fa-face-smile-wink"></i> ไหนบอกซิ... รักเค้าไหม?</h1>
+            <div class="btn-group" id="questionBox">
+                <button class="btn-custom" onclick="sayYes()"><i class="fa-solid fa-heart"></i> รักที่สุดเลย!</button>
+                <button class="btn-custom btn-no" id="btnNo" onmouseover="moveButton()" onclick="moveButton()">ไม่รัก 😜</button>
+            </div>
+            <p id="answerText" style="margin-top: 15px; font-weight: 600; color: var(--primary); font-size: 15px;"></p>
+        </div>
+
+    </div>
+
+    <!-- Modal Lightbox -->
+    <div class="modal" id="imageModal" onclick="closeModal()">
+        <img id="modalImg" src="" alt="Enlarged Memory">
+    </div>
+
+    <script>
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyFhRqC1AxEBRtnLfveQRnZzErTGVnZF39VmYWYVmSi6JF7cm-EtpOJr94WhWBA1DUh/exec';
+        let isHovered = false;
+
+        // --- 0. Enter Main Website from Cake Intro ---
+        function enterWebsite() {
+            // จุดพลุกระดาษฉลอง
+            confetti({
+                particleCount: 150,
+                spread: 90,
+                origin: { y: 0.5 },
+                colors: ['#ff3366', '#ff6b8b', '#ffb703', '#ffffff']
+            });
+
+            // ซ่อนหน้าเค้กแบบนุ่มนวล
+            const intro = document.getElementById('introScreen');
+            intro.classList.add('fade-out');
+        }
+
+        // --- 1. Countdown Logic ---
+        function updateCountdown() {
+            const now = new Date();
+            let year = now.getFullYear();
+            let birthday = new Date(year, 8, 26);
+
+            if (now > birthday) {
+                birthday = new Date(year + 1, 8, 26);
+            }
+
+            const diff = birthday - now;
+            document.getElementById('days').innerText = Math.floor(diff / (1000 * 60 * 60 * 24));
+            document.getElementById('hours').innerText = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            document.getElementById('minutes').innerText = Math.floor((diff / 1000 / 60) % 60);
+            document.getElementById('seconds').innerText = Math.floor((diff / 1000) % 60);
+        }
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+
+        // --- 2. Base64 Upload & Compression ---
+        function uploadImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const progress = document.getElementById('uploadProgress');
+            progress.style.display = 'block';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const maxWidth = 550;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+                    fetch(APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ imageBase64: compressedBase64 })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        progress.style.display = 'none';
+                        if(data.status === 'success') {
+                            loadGallery();
+                        } else {
+                            alert('เกิดข้อผิดพลาดในการบันทึก');
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        progress.style.display = 'none';
+                        alert('อัปโหลดไม่สำเร็จ โปรดลองอีกครั้ง');
+                    });
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- 3. Load Gallery & Auto-Scroll Loop ---
+        async function loadGallery() {
+            const container = document.getElementById('galleryContainer');
+            try {
+                const res = await fetch(APPS_SCRIPT_URL);
+                const images = await res.json();
+
+                if (images && images.length > 0) {
+                    container.innerHTML = '';
+                    images.reverse().forEach(base64Str => {
+                        const img = document.createElement('img');
+                        img.src = base64Str;
+                        img.className = 'gallery-item';
+                        img.onclick = () => openModal(base64Str);
+                        container.appendChild(img);
+                    });
+                } else {
+                    container.innerHTML = '<p style="color: #888; font-size: 13px;">ยังไม่มีรูปภาพ กดปุ่ม + เพื่อเพิ่มรูปได้เลย!</p>';
+                }
+            } catch (err) {
+                console.error('Gallery Load Error:', err);
+                container.innerHTML = '<p style="color: #888; font-size: 13px;">ไม่สามารถโหลดรูปภาพได้</p>';
+            }
+        }
+        loadGallery();
+
+        // Auto-scroll Gallery Loop
+        setInterval(() => {
+            const wrapper = document.getElementById('galleryWrapper');
+            if (!wrapper || isHovered) return;
+
+            if (wrapper.scrollLeft + wrapper.clientWidth >= wrapper.scrollWidth - 2) {
+                wrapper.scrollLeft = 0;
+            } else {
+                wrapper.scrollLeft += 1;
+            }
+        }, 25);
+
+        // --- Lightbox Modal ---
+        function openModal(src) {
+            document.getElementById('modalImg').src = src;
+            document.getElementById('imageModal').style.display = 'flex';
+        }
+        function closeModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+
+        // --- 4. Interactive Love Game ---
+        function moveButton() {
+            const btnNo = document.getElementById('btnNo');
+            const x = Math.random() * 200 - 100;
+            const y = Math.random() * 100 - 50;
+            btnNo.style.transform = `translate(${x}px, ${y}px)`;
+        }
+
+        function sayYes() {
+            confetti({
+                particleCount: 120,
+                spread: 80,
+                origin: { y: 0.6 },
+                colors: ['#ff3366', '#ff6b8b', '#ffb703', '#ffffff']
+            });
+            document.getElementById('answerText').innerText = "เย้! รู้อยู่แล้วว่าต้องรักเค้า งั้นห้ามงอแงนะคนเก่ง! 🥰💖";
+        }
+
+        // --- 5. Heart Particles Canvas ---
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class HeartParticle {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + 20;
+                this.size = Math.random() * 10 + 8;
+                this.speedY = Math.random() * 1.2 + 0.6;
+                this.opacity = Math.random() * 0.5 + 0.3;
+            }
+            update() {
+                this.y -= this.speedY;
+                if (this.y < -20) this.reset();
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = '#ff6b8b';
+                ctx.font = `${this.size}px serif`;
+                ctx.fillText('❤️', this.x, this.y);
+                ctx.restore();
+            }
+        }
+
+        for (let i = 0; i < 18; i++) {
+            particles.push(new HeartParticle());
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+    </script>
+</body>
+</html>
